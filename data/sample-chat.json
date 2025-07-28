@@ -1,0 +1,41 @@
+[
+  {
+    "sender": "user",
+    "content": "Write a poem about the ocean.",
+    "timestamp": 1723456789000
+  },
+  {
+    "sender": "ai",
+    "botId": "llama4-maverick-17b-128e-instruct",
+    "content": "The ocean's waves crash on the shore,\nA soothing sound that calms the soul once more...",
+    "timestamp": 1723456790000,
+    "model": "Llama 4 Maverick 17B 128E Instruct",
+    "temperature": 0.7,
+    "usage": {
+      "prompt_tokens": 16,
+      "completion_tokens": 35,
+      "total_tokens": 51
+    },
+    "endpoint": "https://api.cerebras.ai/v1/chat/completions",
+    "response_time_ms": 674,
+    "id": "cmpl-abc123",
+    "finish_reason": "stop"
+  },
+  {
+    "sender": "ai",
+    "botId": "llama4-scout-17b-16e-instruct",
+    "content": "The ocean's waves crash on the shore,\nA soothing sound that I adore...",
+    "timestamp": 1723456791000,
+    "model": "Llama 4 Scout 17B 16E Instruct",
+    "temperature": 1.0,
+    "usage": {
+      "prompt_tokens": 16,
+      "completion_tokens": 32,
+      "total_tokens": 48
+    },
+    "endpoint": "https://api.cerebras.ai/v1/chat/completions",
+    "response_time_ms": 812,
+    "id": "cmpl-def456",
+    "finish_reason": "stop"
+  }
+] 

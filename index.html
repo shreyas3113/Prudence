@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <link href="styles/main.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button id="newChatButton" class="new-chat-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    New Chat
+                </button>
+            </div>
+            
+            <div class="chat-history" id="historySection">
+                <div class="chat-history-header">Recent Chats</div>
+                <div id="chatHistoryList" class="chat-history-list">
+                    <!-- Chat history items will be added here -->
+                </div>
+            </div>
+
+            <div class="auth-buttons" id="authButtons">
+                <button class="auth-btn login-btn">Login</button>
+                <button class="auth-btn signup-btn">Signup</button>
+                <button class="auth-btn logout-btn" style="display: none;">Logout</button>
+                <button class="auth-btn settings-btn">Settings</button>
+            </div>
+            <button id="loadJsonBtn" style="margin: 1em auto; display: block; width: 90%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 1em; padding: 0.7em 1.2em; font-size: 1em; cursor: pointer; transition: background 0.2s;">Load JSON File</button>
+        </div>
+
+        <div class="main-chat">
+            <div class="chat-header">
+                <h3>Prudence AI - The Collective mind</h3>
+                <div class="header-controls">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
+                        🌙
+                    </button>
+                    <button id="botsToggle" class="bots-toggle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        My AI Models
+                    </button>
+                    <button id="compareToggle" class="ensemble-toggle active">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Ensemble Mode
+                    </button>
+                </div>
+            </div>
+
+            <div class="bots-panel" id="botsPanel">
+                <div class="bots-header">
+                    <h3>Selected AI Models</h3>
+                    <button class="close-bots">×</button>
+                </div>
+                <div class="bots-grid" id="botsGrid">
+                    <!-- Will be dynamically filled by JS -->
+                </div>
+            </div>
+
+            <div class="compare-container active" id="compareContainer">
+                <div class="compare-responses" id="compareResponses">
+                    <!-- Compare responses will be added here -->
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai-message" data-welcome="true">
+                    <div class="message-content">
+                        <strong>🤖 Prudence AI:</strong>
+                        <div>Welcome to AI Chat Interface</div>
+                        <div>Start a conversation with your AI assistant. Select different models or use compare mode to see responses from multiple AIs.</div>
+                    </div>
+                    <div class="message-time">05:54 PM</div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Type your message here..." autocomplete="off">
+                    <button id="sendButton" class="send-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bot-carousel-container">
+                <div class="carousel-header">
+                    <h3>Quick Select AI Models (select upto 3)</h3>
+                </div>
+                
+                <div class="carousel-wrapper">
+                    <button class="carousel-btn" id="carouselPrev">‹</button>
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- Bot cards will be inserted by JavaScript -->
+                    </div>
+                    <button class="carousel-btn" id="carouselNext">›</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 300px; color: black;">
+            <h2 id="modalTitle">Login</h2>
+            <input type="text" id="modalEmail" placeholder="Email" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <input type="password" id="modalPassword" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <button id="modalSubmit" style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Login</button>
+            <button id="modalClose" style="width: 100%; padding: 10px; margin-top: 10px; background: #ccc; color: black; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+            <div id="toggleModalAuth" style="margin-top: 10px; color: #667eea; cursor: pointer;">Need an account? Sign Up</div>
+        </div>
+    </div>
+
+    <!-- Pop-out Modal for Compare Response -->
+    <div id="comparePopoutModal" class="compare-popout-modal" style=" position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+        <div class="compare-popout-content">
+        <button id="closeComparePopout" style="position:absolute; top:1rem; right:1rem; background:transparent; border:none; font-size:1.8rem; cursor:pointer; color:#888;">&times;</button>
+        <div id="comparePopoutContentArea"></div>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <!-- Markdown parser (marked.js) for Markdown support in chat responses -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="js/script.js"></script>
+    <div id="jsonModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:2000; align-items:center; justify-content:center;">
+      <div style="background:#fff; color:#222; border-radius:1.5rem; max-width:700px; width:90vw; max-height:90vh; overflow:auto; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.25); padding:2rem;">
+        <button id="closeJsonModal" style="position:absolute; top:1rem; right:1rem; background:transparent; border:none; font-size:1.5rem; cursor:pointer; color:#888;">&times;</button>
+        <pre id="jsonModalContent" style="font-family:monospace; font-size:1em; background:#f4f4f4; border-radius:8px; padding:1em;"></pre>
+      </div>
+    </div>
+    <div id="floating-temp-slider" style="display:none; position:fixed; z-index:99999; background:#fff; color:#222; border-radius:0.7em; box-shadow:0 2px 8px rgba(0,0,0,0.12); padding:0.5em 1em; min-width:180px; text-align:center; border:1px solid #ddd;">
+    <!-- Slider will be rendered here by JS -->
+</div>
+</body>
+</html>
