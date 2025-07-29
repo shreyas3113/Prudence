@@ -45,6 +45,88 @@ window.testGeminiAPI = async function() {
     }
 };
 
+// Test fusion function (for debugging)
+window.testFusion = async function() {
+    console.log('🧪 Testing fusion functionality...');
+    
+    const testResponses = [
+        "AI works through neural networks and machine learning algorithms.",
+        "Artificial intelligence processes data to make intelligent decisions.",
+        "Machine learning enables computers to learn from experience."
+    ];
+    
+    try {
+        const fusionPrompt = `Here are responses from 3 different AI models about: "What is AI?"
+
+Model 1 (Test Model 1): ${testResponses[0]}
+Model 2 (Test Model 2): ${testResponses[1]}
+Model 3 (Test Model 3): ${testResponses[2]}
+
+Please synthesize these responses into one comprehensive, coherent answer.`;
+
+        console.log('📝 Test fusion prompt:', fusionPrompt);
+        
+        const result = await geminiAPI.generateResponse(fusionPrompt, {
+            model: 'gemini-2.5-flash',
+            temperature: 0.7,
+            maxTokens: 500
+        });
+        
+        console.log('✅ Test fusion successful!');
+        console.log('Result:', result);
+        console.log('Text:', result.text);
+        
+        alert('Test fusion successful! Check console for details.');
+        
+    } catch (error) {
+        console.error('❌ Test fusion failed:', error);
+        alert('Test fusion failed: ' + error.message);
+    }
+};
+
+// Simple Gemini test function
+window.testSimpleGemini = async function() {
+    console.log('🧪 Testing simple Gemini API call...');
+    
+    try {
+        const result = await geminiAPI.generateResponse("Hello! Please respond with a simple greeting.", {
+            model: 'gemini-2.5-flash',
+            temperature: 0.7,
+            maxTokens: 100
+        });
+        
+        console.log('✅ Simple Gemini test successful!');
+        console.log('Result:', result);
+        console.log('Text:', result.text);
+        
+        alert('Simple Gemini test successful! Check console for details.');
+        
+    } catch (error) {
+        console.error('❌ Simple Gemini test failed:', error);
+        alert('Simple Gemini test failed: ' + error.message);
+    }
+};
+
+// Check available Gemini models
+window.checkGeminiModels = async function() {
+    console.log('🔍 Checking available Gemini models...');
+    
+    try {
+        const models = await geminiAPI.getAvailableModels();
+        console.log('✅ Available Gemini models:', models);
+        
+        // Also check our configured models
+        console.log('🎯 Our configured models:', geminiAPI.listModels());
+        console.log('⚙️ Default model:', geminiAPI.defaultModel);
+        
+        alert('Gemini models check complete! Check console for details.');
+        
+    } catch (error) {
+        console.error('❌ Gemini models check failed:', error);
+        alert('Gemini models check failed: ' + error.message);
+    }
+};
+
 // Firebase initialization check
 const checkFirebaseInit = () => {
     try {
@@ -745,44 +827,9 @@ class ChatInterface {
                     this.sendButton.disabled = false;
                     // Save chat history after all responses are complete
                     this.saveChatHistory();
-                    // After all responses, add the concatenated response
-                    const concatDiv = document.createElement('div');
-                    concatDiv.className = 'compare-response compare-response-concat';
-                    concatDiv.style.background = '#f0f4ff';
-                    concatDiv.style.border = '2px solid #667eea';
-                    concatDiv.style.marginTop = '1em';
-                    concatDiv.style.padding = '1em';
-                    concatDiv.innerHTML = `<div class="compare-response-header"><strong>Combined Response</strong><button class="compare-popout-btn" title="Expand this response"> Expand</button></div><div class="compare-response-content">${botResponses.map(r => this.formatAnswer(r)).join('<hr style=\"margin:1em 0;\">')}</div>`;
-                    grid.appendChild(concatDiv);
                     
-                    // Add expand button functionality for the concatenated response
-                    const concatPopoutBtn = concatDiv.querySelector('.compare-popout-btn');
-                    concatPopoutBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const modal = document.getElementById('comparePopoutModal');
-                        const contentArea = document.getElementById('comparePopoutContentArea');
-                        if (modal && contentArea) {
-                            contentArea.innerHTML = `
-                                <div class="compare-popout-header" style="display:flex;align-items:center;gap:0.7em;margin-bottom:1em;">
-                                    <span class="compare-popout-icon" style="font-size:2rem;">🔗</span>
-                                    <span class="compare-popout-name" style="font-weight:600;font-size:1.2rem;">Combined Response</span>
-                                </div>
-                                <div class='compare-response-content'>${botResponses.map(r => this.formatAnswer(r)).join('<hr style="margin:1em 0;">')}</div>
-                            `;
-                            // Highlight code blocks in modal
-                            if (window.hljs) {
-                                contentArea.querySelectorAll('.compare-response-content pre code').forEach((block) => {
-                                    window.hljs.highlightElement(block);
-                                });
-                            }
-                            modal.classList.add('active');
-                        }
-                    });
-                    
-                    // Auto-scroll to bottom after all responses are complete
-                    if (this.compareContainer) {
-                        this.compareContainer.scrollTop = this.compareContainer.scrollHeight;
-                    }
+                    // Generate fused response using Gemini 2.5 Flash
+                    this.generateFusedResponse(message, botResponses, grid);
                 }
             }, Math.random() * 2000 + 1000 + (index * 500));
 
@@ -820,6 +867,175 @@ class ChatInterface {
                 };
             }
         });
+    }
+
+    // Generate fused response using Gemini 2.5 Flash
+    async generateFusedResponse(userMessage, botResponses, grid) {
+        try {
+            console.log('🔍 Starting fusion process...');
+            console.log('📨 User message:', userMessage);
+            console.log('🤖 Bot responses:', botResponses);
+            console.log('🎯 Selected bots:', this.selectedBots);
+
+            // Validate bot responses
+            if (!botResponses || botResponses.length === 0) {
+                throw new Error('No bot responses available for fusion');
+            }
+
+            // Filter out empty responses
+            const validResponses = botResponses.filter(response => response && response.trim() !== '');
+            if (validResponses.length === 0) {
+                throw new Error('No valid responses available for fusion');
+            }
+
+            console.log('✅ Valid responses for fusion:', validResponses.length);
+
+            // Create fusion prompt
+            const fusionPrompt = `Here are responses from ${validResponses.length} different AI models about: "${userMessage}"
+
+${validResponses.map((response, index) => 
+    `Model ${index + 1} (${this.aiModels[this.selectedBots[index]]?.name || `AI Model ${index + 1}`}): ${response}`
+).join('\n\n')}
+
+Please synthesize these responses into one comprehensive, coherent answer. Combine the best insights from each, resolve any contradictions, and create a unified response that captures the full scope of the topic. Make it natural and well-structured.`;
+
+            // Show typing indicator for fusion
+            const fusedDiv = document.createElement('div');
+            fusedDiv.className = 'compare-response compare-response-fused';
+            fusedDiv.style.background = '#f0f8ff';
+            fusedDiv.style.border = '2px solid #4CAF50';
+            fusedDiv.style.marginTop = '1em';
+            fusedDiv.style.padding = '1em';
+            fusedDiv.innerHTML = `
+                <div class="compare-response-header">
+                    <div class="compare-response-icon">✨</div>
+                    <div class="compare-response-name">
+                        <span class="bot-name-text">Gemini 2.5 Flash - Fused Response</span>
+                        <button class="compare-popout-btn" title="Expand this response"> Expand</button>
+                    </div>
+                </div>
+                <div class="compare-response-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(fusedDiv);
+
+            // Generate fused response using Gemini 2.5 Flash
+            console.log('🔄 Generating fused response with Gemini 2.5 Flash...');
+            console.log('📝 Fusion prompt:', fusionPrompt);
+            
+            const fusedResult = await geminiAPI.generateResponse(fusionPrompt, {
+                model: 'gemini-2.5-flash',
+                temperature: 0.7,
+                maxTokens: 3000  // Increased token limit for longer responses
+            });
+
+            console.log('✅ Fused result received:', fusedResult);
+            console.log('📄 Fused result structure:', JSON.stringify(fusedResult, null, 2));
+            
+            // Check different possible response structures
+            let fusedText = '';
+            if (fusedResult.text) {
+                fusedText = fusedResult.text;
+            } else if (fusedResult.response && fusedResult.response.text) {
+                fusedText = fusedResult.response.text;
+            } else if (fusedResult.candidates && fusedResult.candidates[0] && fusedResult.candidates[0].content) {
+                fusedText = fusedResult.candidates[0].content.parts[0].text;
+            } else if (typeof fusedResult === 'string') {
+                fusedText = fusedResult;
+            } else {
+                console.error('❌ Unexpected response structure:', fusedResult);
+                throw new Error('Unexpected Gemini API response structure');
+            }
+            
+            console.log('📄 Extracted fused text:', fusedText);
+
+            // Format and display the fused response
+            const formattedFusedResponse = this.formatAnswer(fusedText);
+            console.log('🎨 Formatted response:', formattedFusedResponse);
+            const currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const timestampHtml = `<div class="compare-response-time" style="color: green; font-weight: bold; margin-top: 1rem; text-align: left;">${currentTime}</div>`;
+
+            // Ensure we have content to display
+            if (!fusedText || fusedText.trim() === '') {
+                throw new Error('Gemini API returned empty response');
+            }
+
+            fusedDiv.querySelector('.compare-response-content').innerHTML = formattedFusedResponse + timestampHtml;
+            console.log('📱 Content set in DOM:', fusedDiv.querySelector('.compare-response-content').innerHTML);
+
+            // Highlight code blocks if highlight.js is available
+            if (window.hljs) {
+                fusedDiv.querySelectorAll('.compare-response-content pre code').forEach((block) => {
+                    window.hljs.highlightElement(block);
+                });
+            }
+
+            // Add expand button functionality for the fused response
+            const fusedPopoutBtn = fusedDiv.querySelector('.compare-popout-btn');
+            fusedPopoutBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const modal = document.getElementById('comparePopoutModal');
+                const contentArea = document.getElementById('comparePopoutContentArea');
+                if (modal && contentArea) {
+                    contentArea.innerHTML = `
+                        <div class="compare-popout-header" style="display:flex;align-items:center;gap:0.7em;margin-bottom:1em;">
+                            <span class="compare-popout-icon" style="font-size:2rem;">✨</span>
+                            <span class="compare-popout-name" style="font-weight:600;font-size:1.2rem;">Gemini 2.5 Flash - Fused Response</span>
+                        </div>
+                        <div class='compare-response-content'>${formattedFusedResponse}</div>
+                    `;
+                    // Highlight code blocks in modal
+                    if (window.hljs) {
+                        contentArea.querySelectorAll('.compare-response-content pre code').forEach((block) => {
+                            window.hljs.highlightElement(block);
+                        });
+                    }
+                    modal.classList.add('active');
+                }
+            });
+
+            // Auto-scroll to bottom after fused response is complete
+            if (this.compareContainer) {
+                this.compareContainer.scrollTop = this.compareContainer.scrollHeight;
+            }
+
+            // Add the fused response to messages array for saving to Firebase
+            this.messages.push({
+                content: fusedText,
+                sender: 'ai',
+                botId: 'gemini-2.5-flash-fused',
+                timestamp: Date.now()
+            });
+
+        } catch (error) {
+            console.error('❌ Error generating fused response:', error);
+            
+            // Fallback to concatenated response if fusion fails
+            const fallbackDiv = document.createElement('div');
+            fallbackDiv.className = 'compare-response compare-response-fallback';
+            fallbackDiv.style.background = '#fff3cd';
+            fallbackDiv.style.border = '2px solid #ffc107';
+            fallbackDiv.style.marginTop = '1em';
+            fallbackDiv.style.padding = '1em';
+            fallbackDiv.innerHTML = `
+                <div class="compare-response-header">
+                    <strong>Combined Response (Fallback)</strong>
+                    <button class="compare-popout-btn" title="Expand this response"> Expand</button>
+                </div>
+                <div class="compare-response-content">
+                    ${botResponses.map(r => this.formatAnswer(r)).join('<hr style="margin:1em 0;">')}
+                    <div style="color: #856404; margin-top: 1rem; font-style: italic;">
+                        Note: Fusion failed, showing concatenated responses instead.
+                    </div>
+                </div>
+            `;
+            grid.appendChild(fallbackDiv);
+        }
     }
 
     addMessage(content, sender, botId = null) {
@@ -927,7 +1143,25 @@ class ChatInterface {
                     temperature: temperatureOverride !== undefined ? temperatureOverride : (this.modelTemperatures[botId] || 0.7),
                     maxTokens: 1000
                 });
-                return geminiResult.text;
+                console.log('✅ Gemini API result:', geminiResult);
+                
+                // Handle different response structures
+                let responseText = '';
+                if (geminiResult.text) {
+                    responseText = geminiResult.text;
+                } else if (geminiResult.response && geminiResult.response.text) {
+                    responseText = geminiResult.response.text;
+                } else if (geminiResult.candidates && geminiResult.candidates[0] && geminiResult.candidates[0].content) {
+                    responseText = geminiResult.candidates[0].content.parts[0].text;
+                } else if (typeof geminiResult === 'string') {
+                    responseText = geminiResult;
+                } else {
+                    console.error('❌ Unexpected Gemini response structure:', geminiResult);
+                    return `Sorry, there was an issue with the Gemini API response format.`;
+                }
+                
+                console.log('📄 Extracted Gemini text:', responseText);
+                return responseText;
             } catch (error) {
                 console.error('Error calling Gemini API:', error);
                 return `Sorry, there was an error connecting to Gemini: ${error.message}`;
